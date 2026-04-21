@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+
 from app.__main__ import app
 
 
@@ -9,5 +10,5 @@ def client():
 
     :return: TestClient instance for the FastAPI app
     :rtype: TestClient
-    """    
+    """
     return TestClient(app)

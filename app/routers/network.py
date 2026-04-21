@@ -1,10 +1,10 @@
 import platform
 import socket
 
-from fastapi import APIRouter
-from fastapi import Request
+from fastapi import APIRouter, Request
 
 router = APIRouter()
+
 
 @router.get("/headers")
 async def get_headers(request: Request):
@@ -14,8 +14,9 @@ async def get_headers(request: Request):
     :type request: Request
     :return: Headers from the request
     :rtype: dict
-    """    
+    """
     return {"headers": dict(request.headers)}
+
 
 @router.get("/server-info")
 async def server_info():
@@ -23,10 +24,13 @@ async def server_info():
 
     :return: Server information
     :rtype: dict
-    """    
+    """
 
     return {
-        "hostname": socket.gethostname(), # Get the hostname of the server
-        "platform": platform.system(), # Get the platform/OS name (e.g., 'Linux', 'Windows')
-        "architecture": platform.machine() # Get the machine architecture (e.g., 'x86_64')
+        "hostname": socket.gethostname(),
+        # Get the hostname of the server
+        "platform": platform.system(),
+        # Get the platform/OS name (e.g., 'Linux', 'Windows')
+        "architecture": platform.machine(),
+        # Get the machine architecture (e.g., 'x86_64')
     }

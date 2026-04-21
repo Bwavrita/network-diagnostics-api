@@ -163,3 +163,46 @@ pytest --watch
 ### Code structure
 
 Each router is located in `app/routers/` and contains FastAPI route handlers. Routes are registered in `app/__main__.py` using `app.include_router()`.
+
+### Pre-commit and Code Quality
+
+This project uses **pre-commit** hooks and **ruff** for code quality and formatting.
+
+#### Installing pre-commit
+
+```bash
+pip install pre-commit
+```
+
+#### Setting up pre-commit hooks
+
+```bash
+pre-commit install
+```
+
+This will automatically run code checks and formatting before each commit.
+
+#### Running pre-commit manually
+
+```bash
+# Run hooks on all files
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run ruff --all-files
+pre-commit run ruff-format --all-files
+```
+
+#### Ruff configuration
+
+The project uses **Ruff** for linting and formatting with the following rules:
+
+- **Line length**: 88 characters
+- **Target Python version**: 3.10+
+- **Lint rules**:
+  - `E` - PEP 8 errors
+  - `F` - Pyflakes (undefined names, unused imports)
+  - `I` - isort (import sorting)
+  - `E501` - Line too long (enforced)
+
+Ruff automatically fixes many issues with `--fix` flag through pre-commit hooks.
