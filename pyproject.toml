@@ -9,11 +9,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-
-extend-select = ["E501"]
-
-ignore = []
+select = ["E", "F", "I", "ANN", "E501"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -23,7 +19,6 @@ indent-style = "space"
 python_version = "3.10"
 strict = false
 
-# Estas são as regras mais úteis para começar
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
@@ -38,3 +33,12 @@ module = [
     "pytest.*",
 ]
 ignore_missing_imports = true
+
+[tool.bandit]
+targets = ["app"]
+severity = "medium"
+confidence = "medium"
+skips = [
+    "B101",
+    "B104",
+]
