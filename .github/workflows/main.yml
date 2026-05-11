@@ -1,0 +1,46 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  checkout-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code 
+        uses: actions/checkout@v2
+      
+      - name: Run ruff
+        uses: ruff-action/ruff-action@v3
+        with:
+          src: './app'
+          vesion-file: './pyproject.toml'
+          args: 'format --check --diff'
+      
+      - name: Run mypy
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - uses: actions/setup-python@v5
+      - run: pip install -r requirements.txt
+      - run: mypy app/
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:      
+      - name: Build and test Docker
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.test
+          push: false
+          tags: network-diagnostics-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Run tests in Docker
+        run: |
+          docker run --rm network-diagnostics-api:test
+      

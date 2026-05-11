@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from src.routers import health, network
+from app.routers import health, network
 
 app = FastAPI(title="Network Diagnostics API", version="1.0")
 
