@@ -35,7 +35,7 @@ jobs:
         with:
           inputs: requirements.txt
 
-build-and-test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
