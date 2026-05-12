@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
+from src.args_parser import parse_args
 from src.routers import health, network
 
 app = FastAPI(title="Network Diagnostics API", version="1.0")
@@ -10,4 +11,8 @@ app.include_router(network.router, prefix="", tags=["network"])
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    args = parse_args()
+    host = args.host
+    port = args.port
+    log_level = args.log_level
+    uvicorn.run(app, host=host, port=port, log_level=log_level)

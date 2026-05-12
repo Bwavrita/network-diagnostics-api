@@ -1,13 +1,15 @@
 from fastapi import APIRouter
 
+from src.schemas.server import HealthCheckResponse
+
 router = APIRouter()
 
 
-@router.get("/health")
-async def health_check():
+@router.get("/health", response_model=HealthCheckResponse)
+async def health_check() -> HealthCheckResponse:
     """Router for health check endpoint.
 
     :return: Health status
-    :rtype: dict
+    :rtype: HealthCheckResponse
     """
-    return {"status": "ok"}
+    return HealthCheckResponse(status="ok")

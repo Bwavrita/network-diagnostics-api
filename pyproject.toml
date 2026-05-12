@@ -9,12 +9,36 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-
-extend-select = ["E501"]
-
-ignore = []
+select = ["E", "F", "I", "ANN", "E501"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fastapi.*",
+    "uvicorn.*",
+    "pytest.*",
+]
+ignore_missing_imports = true
+
+[tool.bandit]
+targets = ["app"]
+severity = "medium"
+confidence = "medium"
+skips = [
+    "B101",
+    "B104",
+]
