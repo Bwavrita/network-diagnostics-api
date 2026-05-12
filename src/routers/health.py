@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.schemas.server import HealthCheckResponse
+from src.schemas.server import HealthCheckResponse
 
 router = APIRouter()
 

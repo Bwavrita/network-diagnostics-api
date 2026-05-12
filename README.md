@@ -1,208 +1,191 @@
 # Network Diagnostics API
 
-A FastAPI-based REST API for diagnosing network and server information. Get details about the host system, request headers, and platform specifications through simple HTTP endpoints.
+FastAPI REST API for simple network and host diagnostics.
 
-## 📋 Features
+## Features
 
-- **Health Check**: Basic endpoint to verify API availability
-- **Request Headers**: Inspect request headers sent to the API
-- **Server Information**: Retrieve detailed information about the host system
+- Health check endpoint
+- Request headers inspection endpoint
+- Server information endpoint:
   - Hostname
-  - Operating System details
+  - Platform/OS
   - CPU architecture
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.8+
-- pip (Python package manager)
+- Python 3.10+
+- pip
 
 ### Installation
 
-1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd network-diagnostics-api
-```
-
-2. Install dependencies:
-```bash
 pip install -r requirements.txt
 ```
 
-### Running the API
+### Run the API
 
-**Option 1: Using Uvicorn directly (recommended for development)**
 ```bash
-uvicorn app.__main__:app --reload
+# Development server (auto-reload)
+uvicorn src.__main__:app --reload
+
+# Or run as module
+python -m src
 ```
 
-**Option 2: Using the Python module**
-```bash
-python -m app
-```
+API base URL: http://localhost:8000
 
-The API will be available at `http://localhost:8000`
+Interactive docs:
 
-### API Documentation
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-Once the API is running, access the interactive documentation:
+## API Endpoints
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+### Health
 
-## 📡 API Endpoints
+`GET /health`
 
-### Health Check
-```
-GET /health
-```
-Returns the API status.
-
-**Response:**
 ```json
 {
   "status": "ok"
 }
 ```
 
-### Request Headers
-```
-GET /headers
-```
-Returns all headers from the incoming request.
+### Headers
 
-**Response:**
+`GET /headers`
+
 ```json
 {
   "headers": {
     "host": "localhost:8000",
-    "user-agent": "python-httpx/0.25.2",
-    ...
+    "user-agent": "python-httpx/0.25.2"
   }
 }
 ```
 
-### Server Information
-```
-GET /server-info
-```
-Returns detailed information about the server/host system.
+### Server Info
 
-**Response:**
+`GET /server-info`
+
 ```json
 {
   "hostname": "my-server",
   "platform": "Linux",
-  "architecture": "x86_64",
+  "architecture": "x86_64"
 }
 ```
 
-## 🧪 Testing
-
-Run the test suite:
+## Testing
 
 ```bash
-# Run all tests with verbose output
+# All tests
 pytest -v
 
-# Run tests from a specific file
-pytest tests/test_health.py
-
-# Run tests with coverage report
-pytest --cov=app
+# Specific files
+pytest -v tests/health_test.py
+pytest -v tests/network_test.py
 ```
 
-### Test Files
+## Code Quality and Security
 
-- `tests/test_health.py` - Tests for the health check endpoint
-- `tests/test_network.py` - Tests for headers and server info endpoints
+This project uses Ruff, Pytest, Mypy, Bandit, pip-audit, and pre-commit.
 
-## 📁 Project Structure
+### Ruff
 
+```bash
+# Lint
+ruff check .
+
+# Auto-fix lint issues when possible
+ruff check . --fix
+
+# Format
+ruff format .
 ```
+
+### Pytest
+
+```bash
+pytest -v
+```
+
+### Mypy
+
+```bash
+mypy src tests
+```
+
+### Bandit
+
+```bash
+bandit -c pyproject.toml -r src tests
+```
+
+### pip-audit
+
+```bash
+pip-audit -r requirements.txt
+```
+
+### pre-commit
+
+```bash
+# Install hooks
+pre-commit install
+
+# Run all hooks manually
+pre-commit run --all-files
+```
+
+### Run everything (local CI-style)
+
+```bash
+ruff check .
+ruff format --check .
+pytest -v
+mypy src tests
+bandit -c pyproject.toml -r src tests
+pip-audit -r requirements.txt
+```
+
+## Project Structure
+
+```text
 network-diagnostics-api/
-├── app/
-│   ├── __init__.py          # Package initialization
-│   ├── __main__.py          # Application entry point
-│   └── routers/
-│       ├── __init__.py
-│       ├── health.py        # Health check router
-│       └── network.py       # Network info routers
+├── src/
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── args_parser.py
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── health.py
+│   │   └── network.py
+│   └── schemas/
+│       └── server.py
 ├── tests/
 │   ├── __init__.py
-│   ├── conftest.py          # Pytest configuration and fixtures
-│   ├── test_health.py       # Health endpoint tests
-│   └── test_network.py      # Network endpoint tests
-├── requirements.txt         # Project dependencies
-└── README.md               # This file
+│   ├── conftest.py
+│   ├── health_test.py
+│   └── network_test.py
+├── pyproject.toml
+├── requirements.txt
+├── Dockerfile
+├── Dockerfile.test
+└── README.md
 ```
 
-## 📦 Dependencies
+## Dependencies
 
-- **fastapi** (0.104.1) - Modern web framework for building APIs with Python
-- **uvicorn** (0.24.0) - ASGI web server for serving FastAPI applications
-- **pytest** (7.4.3) - Testing framework
-- **httpx** (0.25.2) - HTTP client library used by TestClient
-
-## 🛠️ Development
-
-### Installing development dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Running tests in watch mode
-
-```bash
-pytest --watch
-```
-
-### Code structure
-
-Each router is located in `app/routers/` and contains FastAPI route handlers. Routes are registered in `app/__main__.py` using `app.include_router()`.
-
-### Pre-commit and Code Quality
-
-This project uses **pre-commit** hooks and **ruff** for code quality and formatting.
-
-#### Installing pre-commit
-
-```bash
-pip install pre-commit
-```
-
-#### Setting up pre-commit hooks
-
-```bash
-pre-commit install
-```
-
-This will automatically run code checks and formatting before each commit.
-
-#### Running pre-commit manually
-
-```bash
-# Run hooks on all files
-pre-commit run --all-files
-
-# Run specific hook
-pre-commit run ruff --all-files
-pre-commit run ruff-format --all-files
-```
-
-#### Ruff configuration
-
-The project uses **Ruff** for linting and formatting with the following rules:
-
-- **Line length**: 88 characters
-- **Target Python version**: 3.10+
-- **Lint rules**:
-  - `E` - PEP 8 errors
-  - `F` - Pyflakes (undefined names, unused imports)
-  - `I` - isort (import sorting)
-  - `E501` - Line too long (enforced)
-
-Ruff automatically fixes many issues with `--fix` flag through pre-commit hooks.
+- fastapi==0.115.0
+- uvicorn[standard]==0.32.1
+- pytest==9.0.3
+- httpx==0.25.2
+- pre-commit==4.5.1
+- mypy==1.7.0
+- bandit==1.7.6
+- pip-audit==2.6.0

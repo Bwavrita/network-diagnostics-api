@@ -2,7 +2,7 @@ import platform
 import socket
 
 from fastapi import APIRouter, Request
-from app.schemas.server import ServerInfoResponse
+from src.schemas.server import ServerInfoResponse
 
 router = APIRouter()
 

@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.args_parser import parse_args
-from app.routers import health, network
+from src.args_parser import parse_args
+from src.routers import health, network
 
 app = FastAPI(title="Network Diagnostics API", version="1.0")
 
