@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/headers")
-async def get_headers(request: Request):
+async def get_headers(request: Request) -> dict:
     """Get headers from the incoming request.
 
     :param request: The incoming HTTP request
