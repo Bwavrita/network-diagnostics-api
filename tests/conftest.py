@@ -5,7 +5,7 @@ from src.__main__ import app
 
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     """Get the TestClient for the FastAPI app.
 
     :return: TestClient instance for the FastAPI app
