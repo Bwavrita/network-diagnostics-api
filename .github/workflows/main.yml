@@ -1,43 +1,50 @@
-name: Continuous Integration
+name: Continuous Integration & Delivery
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+env:
+  IMAGE_NAME: network-diagnostics-api
+
 jobs:
-  checkout-code:
+  lint-and-sast:
+    name: Code Quality & SAST
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run ruff
-        uses: astral-sh/ruff-action@v3
-        with:
-          src: './src'
-          vesion-file: './pyproject.toml'
-          args: 'format --check --diff'
-
-      - name: Run mypy
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
 
-      - run: pip install -r requirements.txt
-      - run: mypy src/
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Bandit security scan
-        run: bandit -r src/ -c pyproject.toml
+      - name: Run Ruff (Lint & Format Check)
+        run: |
+          ruff check .
+          ruff format --check .
 
-      - name: Pip Audit for dependency vulnerabilities
+      - name: Run Mypy
+        run: mypy src tests
+
+      - name: Run Bandit
+        run: bandit -c pyproject.toml -r src tests
+
+      - name: Pip Audit
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           inputs: requirements.txt
 
-  build-and-test:
+  build:
+    name: Build Docker Image
     runs-on: ubuntu-latest
+    needs: lint-and-sast
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,63 +52,144 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and test Docker
+      - name: Build Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.test
+          file: ./Dockerfile
           push: false
           load: true
-          tags: network-diagnostics-api:test
+          tags: ${{ env.IMAGE_NAME }}:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run tests in Docker
-        run: |
-          docker run --rm network-diagnostics-api:test
+      - name: Export Docker image
+        run: docker save ${{ env.IMAGE_NAME }}:ci-${{ github.sha }} > /tmp/image.tar
 
-deploy:
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/image.tar
+          retention-days: 3
+
+  test-and-scan:
+    name: Test & Image Scan
     runs-on: ubuntu-latest
-    needs: [build-and-test, checkout-code]
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load < /tmp/image.tar
+
+      - name: Run Tests in Docker
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:ci-${{ github.sha }} pytest -v
+
+      - name: Run Trivy (table)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:ci-${{ github.sha }}'
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy (sarif)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:ci-${{ github.sha }}'
+          format: sarif
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  publish:
+    outputs:
+      image_tag: ${{ steps.set-tag.outputs.tag }}
+    name: Publish Image
+    runs-on: ubuntu-latest
+    environment: production
+    needs: test-and-scan
     if: >
       github.event_name == 'push' ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.base.ref == 'main' &&
        contains(github.event.pull_request.labels.*.name, 'publish'))
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Load Docker image
+        run: docker load < /tmp/image.tar
 
-      - name: Set image tag
+      - name: Set image tags
         id: set-tag
         shell: bash
         run: |
           if [ "${{ github.event_name }}" == "push" ]; then
-            # CORREÇÃO: Removido o espaço antes do ${{github.sha}} e colocado um hífen
-            echo "tag=v0.1.${{ github.run_number }}-${{github.sha}}" >> $GITHUB_OUTPUT
+            echo "tag=v0.1.${{ github.run_number }}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" == "pull_request" ]; then
             RAW_BRANCH="${{ github.head_ref }}"
             SAFE_TAG=$(echo "$RAW_BRANCH" | sed 's/[^a-zA-Z0-9]/-/g')
             echo "tag=test-$SAFE_TAG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Log in to Docker Hub
+      - name: Log in to Docker Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Tag and Push
+        run: |
+          REGISTRY_IMAGE="${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          
+          docker tag ${{ env.IMAGE_NAME }}:ci-${{ github.sha }} $REGISTRY_IMAGE:${{ steps.set-tag.outputs.tag }}
+          docker push $REGISTRY_IMAGE:${{ steps.set-tag.outputs.tag }}
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    needs: publish
+    env:
+      IMAGE_TAG: ${{ needs.publish.outputs.image_tag }}
+    if: github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_REGISTRY }}/network-diagnostics-api:${{ steps.set-tag.outputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /srv/network-diagnostics-api
+            
+            export REGISTRY="${{ secrets.DOCKER_REGISTRY }}"
+            export IMAGE_NAME="network-diagnostics-api"
+            
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            
+            docker image prune -f
