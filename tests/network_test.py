@@ -1,8 +1,10 @@
 import platform
 import socket
 
+from fastapi.testclient import TestClient
 
-def test_get_headers(client):
+
+def test_get_headers(client: TestClient) -> None:
     """Test the /headers endpoint to ensure it returns the expected headers.
 
     :param client: TestClient fixture for making requests to the FastAPI app
@@ -17,7 +19,7 @@ def test_get_headers(client):
     assert isinstance(data["headers"], dict)
 
 
-def test_get_headers_content(client):
+def test_get_headers_content(client: TestClient) -> None:
     """Test the /headers endpoint to ensure it returns the expected headers content.
 
     :param client: TestClient fixture for making requests to the FastAPI app
@@ -31,7 +33,7 @@ def test_get_headers_content(client):
     assert "user-agent" in headers
 
 
-def test_server_info(client):
+def test_server_info(client: TestClient) -> None:
     """Test the /server-info endpoint to ensure
     it returns the expected server information.
 
@@ -48,7 +50,7 @@ def test_server_info(client):
     assert "architecture" in data
 
 
-def test_server_info_content(client):
+def test_server_info_content(client: TestClient) -> None:
     """Test the /server-info endpoint to ensure
     it returns valid server information content.
 

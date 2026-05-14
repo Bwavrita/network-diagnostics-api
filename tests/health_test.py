@@ -1,4 +1,7 @@
-def test_health_check(client):
+from starlette.testclient import TestClient
+
+
+def test_health_check(client: TestClient) -> None:
     """Test the /health endpoint to ensure it returns the expected status.
 
     :param client: TestClient fixture for making requests to the FastAPI app
@@ -12,7 +15,7 @@ def test_health_check(client):
     assert data["status"] == "ok"
 
 
-def test_health_returns_json(client):
+def test_health_returns_json(client: TestClient) -> None:
     """Test that the /health endpoint returns a JSON response.
 
     :param client: TestClient fixture for making requests to the FastAPI app
