@@ -192,6 +192,7 @@ jobs:
 
             export REGISTRY="${{ secrets.DOCKER_REGISTRY }}"
             export IMAGE_NAME="network-diagnostics-api"
+            export IMAGE_TAG="${{ env.IMAGE_TAG }}"
 
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
