@@ -5,6 +5,7 @@ pytest==9.0.3
 httpx==0.25.2
 jaraco.context>=6.1.0
 wheel>=0.46.2
+setuptools>=70.0.0
 
 pre-commit==4.5.1
 mypy==1.7.0
