@@ -8,4 +8,4 @@ RUN python -m pip install --upgrade --no-cache-dir pip setuptools wheel
 COPY ./src ./src
 COPY ./tests ./tests
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.__main__:app", "--host", "0.0.0.0", "--port", "8000"]
