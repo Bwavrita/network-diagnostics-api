@@ -1,0 +1,14 @@
+services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./config/promtail:/etc/promtail
+      - /var/log/nginx:/var/log/nginx:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring-network
+
+networks:
+  monitoring-network:
+    driver: bridge

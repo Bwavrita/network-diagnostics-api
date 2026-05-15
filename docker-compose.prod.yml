@@ -1,0 +1,40 @@
+service:
+  network-diagnostics-api:
+    image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+    restart: always
+    ports:
+      - "8000:8000"
+    networks:
+      - api-network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-var:/var/lib/letsencrypt:ro
+      - ./nginx/html:/var/www/certbot:ro
+    depends_on:
+      - network-diagnostics-api
+    networks:
+      - api-network
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/html:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  certbot-etc:
+  certbot-var:
+
+networks:
+  api-network:
+    driver: bridge

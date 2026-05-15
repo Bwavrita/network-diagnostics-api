@@ -31,10 +31,10 @@ jobs:
           ruff format --check .
 
       - name: Run Mypy
-        run: mypy src tests
+        run: mypy app/src app/tests
 
       - name: Run Bandit
-        run: bandit -c pyproject.toml -r src tests
+        run: bandit -c pyproject.toml -r app/src app/tests
 
       - name: Pip Audit
         uses: pypa/gh-action-pip-audit@v1.1.0

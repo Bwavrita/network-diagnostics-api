@@ -1,6 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-
 from src.args_parser import parse_args
 from src.routers import health, network
 
